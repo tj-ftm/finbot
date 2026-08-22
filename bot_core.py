@@ -17,7 +17,7 @@ HYPE_CONFIGS = {"15m": dict(vol_mult=1.5, rr2=4.0, lookback=48),
 MAJORS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 BYBIT_KLINE = "https://api.bybit.com/v5/market/kline"
 # Fallback data sources (GitHub runner IPs get 403'd by Bybit sometimes)
-BINANCE_KLINE = "https://api.binance.com/api/v3/klines"
+BINANCE_KLINE = "https://data-api.binance.vision/api/v3/klines"
 BINANCE_INTERVAL = {"1": "1m", "15": "15m", "60": "1h", "240": "4h", "D": "1d"}
 
 def log(msg):
