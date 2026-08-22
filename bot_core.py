@@ -16,6 +16,9 @@ HYPE_CONFIGS = {"15m": dict(vol_mult=1.5, rr2=4.0, lookback=48),
                 "1h":  dict(vol_mult=3.0, rr2=5.0, lookback=48)}
 MAJORS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 BYBIT_KLINE = "https://api.bybit.com/v5/market/kline"
+# Fallback data sources (GitHub runner IPs get 403'd by Bybit sometimes)
+BINANCE_KLINE = "https://api.binance.com/api/v3/klines"
+BINANCE_INTERVAL = {"1": "1m", "15": "15m", "60": "1h", "240": "4h", "D": "1d"}
 
 def log(msg):
     line = f"{datetime.now(timezone.utc).isoformat()} {msg}"
@@ -31,21 +34,35 @@ def load_state():
 def save_state(s): json.dump(s, open(STATE_FILE, "w"), indent=1)
 
 def fetch_candles(symbol, interval_min, limit=250, retries=4):
-    url = f"{BYBIT_KLINE}?category=linear&symbol={symbol}&interval={interval_min}&limit={limit}"
+    """Try Bybit first, fall back to Binance (GH runner IPs sometimes 403'd by Bybit)."""
     import time as _t
-    for attempt in range(retries):
-        try:
-            d = json.loads(urlopen(Request(url, headers={"User-Agent": "Mozilla/5.0 finbot/1.0"}), timeout=20).read())
-            break
-        except Exception as e:
-            if attempt == retries - 1:
-                log(f"fetch failed {symbol} {interval_min}: {e}")
-                return []
-            _t.sleep(2 * (attempt + 1))
-    rows = sorted(({"time": int(r[0]), "open": float(r[1]), "high": float(r[2]),
-                    "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])}
-                   for r in d["result"]["list"]), key=lambda x: x["time"])
-    return rows
+    # --- Binance attempt first from runners (more reliable there), bybit locally ---
+    sources = []
+    bin_iv = BINANCE_INTERVAL.get(str(interval_min))
+    if bin_iv:
+        sources.append((BINANCE_KLINE + f"?symbol={symbol}&interval={bin_iv}&limit={limit}",
+                        "Mozilla/5.0 finbot/1.0", "binance"))
+    sources.append((f"{BYBIT_KLINE}?category=linear&symbol={symbol}&interval={interval_min}&limit={limit}",
+                    "Mozilla/5.0 finbot/1.0", "bybit"))
+    last_err = None
+    for url, ua, name in sources:
+        for attempt in range(retries):
+            try:
+                d = json.loads(urlopen(Request(url, headers={"User-Agent": ua}), timeout=20).read())
+                if name == "binance":
+                    rows = sorted(({"time": int(r[0]), "open": float(r[1]), "high": float(r[2]),
+                                    "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])}
+                                   for r in d), key=lambda x: x["time"])
+                else:
+                    rows = sorted(({"time": int(r[0]), "open": float(r[1]), "high": float(r[2]),
+                                    "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])}
+                                   for r in d["result"]["list"]), key=lambda x: x["time"])
+                return rows
+            except Exception as e:
+                last_err = e
+                _t.sleep(1.5 * (attempt + 1))
+    log(f"fetch failed {symbol} {interval_min}: {last_err}")
+    return []
 
 def ema_series(cl, n):
     out=[None]*len(cl)
