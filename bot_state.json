@@ -1,5 +1,42 @@
 {
- "positions": [],
+ "positions": [
+  {
+   "strat": "donchian_daily",
+   "symbol": "BTCUSDT",
+   "entry": 78338.03,
+   "sl": 72905.65,
+   "tp": 94635.17,
+   "exit_sma": 65424.935,
+   "risk_frac": 0.06934537414331202,
+   "notional_usd": 8.19,
+   "leverage": 3,
+   "opened_at": "2026-08-22T18:11:35.686373+00:00"
+  },
+  {
+   "strat": "donchian_daily",
+   "symbol": "ETHUSDT",
+   "entry": 2516.3,
+   "sl": 2263.11,
+   "tp": 3275.8700000000003,
+   "exit_sma": 1963.0050000000003,
+   "risk_frac": 0.10061995787465725,
+   "notional_usd": 5.65,
+   "leverage": 3,
+   "opened_at": "2026-08-22T18:11:36.369658+00:00"
+  },
+  {
+   "strat": "donchian_daily",
+   "symbol": "SOLUSDT",
+   "entry": 93.72,
+   "sl": 86.72,
+   "tp": 114.72,
+   "exit_sma": 77.1505,
+   "risk_frac": 0.07469056764831412,
+   "notional_usd": 7.61,
+   "leverage": 3,
+   "opened_at": "2026-08-22T18:11:37.058692+00:00"
+  }
+ ],
  "trades": [],
  "attempts": 0,
  "week": 34
