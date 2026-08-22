@@ -3,3 +3,8 @@
 2026-08-22T17:56:00.813836+00:00 fetch failed BTCUSDT D: HTTP Error 403: Forbidden
 2026-08-22T17:56:13.069686+00:00 fetch failed ETHUSDT D: HTTP Error 403: Forbidden
 2026-08-22T17:56:25.437144+00:00 fetch failed SOLUSDT D: HTTP Error 403: Forbidden
+2026-08-22T18:00:26.065321+00:00 fetch failed HYPEUSDT 15: HTTP Error 403: Forbidden
+2026-08-22T18:00:38.354937+00:00 fetch failed HYPEUSDT 60: HTTP Error 403: Forbidden
+2026-08-22T18:00:50.543323+00:00 fetch failed BTCUSDT D: HTTP Error 403: Forbidden
+2026-08-22T18:01:02.695815+00:00 fetch failed ETHUSDT D: HTTP Error 403: Forbidden
+2026-08-22T18:01:14.905945+00:00 fetch failed SOLUSDT D: HTTP Error 403: Forbidden
