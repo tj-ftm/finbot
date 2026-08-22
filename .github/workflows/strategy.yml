@@ -1,0 +1,54 @@
+name: FinBot strategy loop
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 min (free tier: ~2900 runs/mo, enough)
+  workflow_dispatch: {}       # manual run button
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finbot-loop
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || 'main' }}
+
+      - name: Commit state from last run
+        run: |
+          git config user.name "finbot"
+          git config user.email "bot@users.noreply.github.com"
+          git pull --rebase origin main || true
+        continue-on-error: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run strategy cycle
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATE_FILE: ${{ github.workspace }}/bot_state.json
+          CAPITAL_INR: '1000'
+          RISK_INR: '50'
+          USDINR: '88'
+        run: python run.py
+
+      - name: Persist state
+        run: |
+          git config user.name "finbot"
+          git config user.email "bot@users.noreply.github.com"
+          git add bot_state.json bot.log
+          if git diff --cached --quiet; then
+            echo "no state change"
+          else
+            git commit -m "state update $(date -u +%FT%TZ)"
+            git push origin main
+          fi
