@@ -30,9 +30,18 @@ def load_state():
 
 def save_state(s): json.dump(s, open(STATE_FILE, "w"), indent=1)
 
-def fetch_candles(symbol, interval_min, limit=250):
+def fetch_candles(symbol, interval_min, limit=250, retries=4):
     url = f"{BYBIT_KLINE}?category=linear&symbol={symbol}&interval={interval_min}&limit={limit}"
-    d = json.loads(urlopen(Request(url, headers={"User-Agent": "b"}), timeout=20).read())
+    import time as _t
+    for attempt in range(retries):
+        try:
+            d = json.loads(urlopen(Request(url, headers={"User-Agent": "Mozilla/5.0 finbot/1.0"}), timeout=20).read())
+            break
+        except Exception as e:
+            if attempt == retries - 1:
+                log(f"fetch failed {symbol} {interval_min}: {e}")
+                return []
+            _t.sleep(2 * (attempt + 1))
     rows = sorted(({"time": int(r[0]), "open": float(r[1]), "high": float(r[2]),
                     "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])}
                    for r in d["result"]["list"]), key=lambda x: x["time"])
@@ -51,7 +60,7 @@ def atr(c,i,n=14):
     return sum(trs)/len(trs)
 
 def hype_signal(c,cfg):
-    if len(c)<210: return None
+    if not c or len(c)<210: return None
     closes=[x["close"] for x in c]; i=len(c)-2
     e50,e200=ema_series(closes[:i+1],50)[-1],ema_series(closes[:i+1],200)[-1]
     px_prev,px=closes[-2],closes[-1]
@@ -65,7 +74,7 @@ def hype_signal(c,cfg):
     return None
 
 def donchian_signal(c):
-    if len(c)<110: return None
+    if not c or len(c)<110: return None
     closes=[x["close"] for x in c[:-1]]; i=len(closes)-1
     sma100=sum(closes[i-99:i+1])/100
     px,prev=closes[i],closes[i-1]
